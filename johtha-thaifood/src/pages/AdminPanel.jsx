@@ -467,7 +467,7 @@ const orderCard = {
   borderRadius: 14,
   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
   marginBottom: 15,
-  width: "100%",        // ✅ เพิ่ม
+//   width: "100%",        // ✅ เพิ่ม
 };
 
 const orderTop = {

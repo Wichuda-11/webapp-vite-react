@@ -30,8 +30,6 @@ export default function Login() {
   // };
   const handleLogin = async () => {
   try {
-    const auth = getAuth();
-
     const res = await signInWithEmailAndPassword(
       auth,
       email,
@@ -120,8 +118,8 @@ export default function Login() {
                 <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 style={{
                     ...inputStyle,
                     paddingRight: 40

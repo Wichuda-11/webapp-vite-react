@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { db, storage } from "../firebase/firebase";
+import { db } from "../firebase/firebase";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection,
@@ -10,8 +10,8 @@ import {
   deleteDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import "../index.css";
+import html2pdf from "html2pdf.js";
 
 export default function AdminPanel() {
   const [tab, setTab] = useState("orders");
@@ -21,8 +21,8 @@ export default function AdminPanel() {
   const [products, setProducts] = useState([]);
 
   const [name, setName] = useState("");
+  const [stock, setStock] = useState("");
   const [price, setPrice] = useState("");
-  const [file, setFile] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
   const [trackingMap, setTrackingMap] = useState({});
@@ -95,34 +95,26 @@ export default function AdminPanel() {
       return;
     }
 
-    let imageUrl = "";
-
-    if (file) {
-      const fileRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      await uploadBytes(fileRef, file);
-      imageUrl = await getDownloadURL(fileRef);
-    }
-
     if (editingId) {
       await updateDoc(doc(db, "products", editingId), {
         name,
+        stock: Number(stock),
         price: Number(price),
-        ...(imageUrl && { imageUrl }),
       });
       alert("แก้ไขแล้ว");
     } else {
       await addDoc(collection(db, "products"), {
         name,
+        stock: Number(stock),
         price: Number(price),
-        imageUrl,
         createdAt: serverTimestamp(),
       });
       alert("เพิ่มสินค้าแล้ว");
     }
 
     setName("");
+    setStock("");
     setPrice("");
-    setFile(null);
     setEditingId(null);
 
     fetchProducts();
@@ -136,9 +128,34 @@ export default function AdminPanel() {
 
   const handleEditProduct = (p) => {
     setName(p.name);
+    setStock(p.stock);
     setPrice(p.price);
     setEditingId(p.id);
   };
+
+  const handleDownloadPDF = async () => {
+  const buttons = document.querySelectorAll(".no-print-btn");
+
+  // hide buttons
+  buttons.forEach((btn) => (btn.style.display = "none"));
+
+  const element = document.getElementById("print-area");
+
+  const opt = {
+    margin: 0.5,
+    left: 10,
+    top: 10,
+    filename: `order-${selectedOrder?.id}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
+  };
+
+  await html2pdf().set(opt).from(element).save();
+
+  // show buttons back
+  buttons.forEach((btn) => (btn.style.display = "block"));
+};
 
   /* ================= GUARD ================= */
   if (!user) return <div style={center}>⏳ กำลังโหลด...</div>;
@@ -205,6 +222,7 @@ export default function AdminPanel() {
                 <input
                   placeholder="เลขพัสดุ"
                   value={trackingMap[o.id] || ""}
+                  disabled={o.status === "shipped"}
                   onChange={(e) =>
                     setTrackingMap({
                       ...trackingMap,
@@ -217,6 +235,7 @@ export default function AdminPanel() {
                 <button
                   style={primaryBtn}
                   onClick={() => updateOrder(o.id, "shipped")}
+                  disabled={o.status === "shipped"}
                 >
                   🚚 ส่งแล้ว
                 </button>
@@ -246,9 +265,11 @@ export default function AdminPanel() {
             />
 
             <input
-              type="file"
-              onChange={(e) => setFile(e.target.files[0])}
-              style={fileInput}
+              type="number"
+              placeholder="จำนวนสินค้า"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              style={input}
             />
 
             <button style={primaryBtn} onClick={handleSaveProduct}>
@@ -261,8 +282,10 @@ export default function AdminPanel() {
               {p.imageUrl && <img src={p.imageUrl} style={imgPreview} />}
 
               <div style={{ flex: 1 }}>
-                <h4>{p.name}</h4>
+                {/* <h4>{p.name}</h4> */}
+                <p style={{ color: "#16a34a" }}>{p.name}</p>
                 <p style={{ color: "#16a34a" }}>{p.price} EUR</p>
+                <p style={{ color: "#16a34a" }}>{p.stock} ชิ้น</p>
               </div>
 
               <button style={editBtn} onClick={() => handleEditProduct(p)}>
@@ -324,11 +347,11 @@ export default function AdminPanel() {
 
             {/* ปุ่ม */}
             <div style={{ display: "flex", gap: 10 }}>
-              <button style={printBtn} onClick={() => window.print()}>
+              <button className="no-print-btn" style={printBtn} onClick={handleDownloadPDF}>
                 🖨 Print
               </button>
 
-              <button style={cancelBtn} onClick={() => setSelectedOrder(null)}>
+              <button className="no-print-btn" style={cancelBtn} onClick={() => setSelectedOrder(null)}>
                 ปิด
               </button>
             </div>
@@ -444,6 +467,7 @@ const orderCard = {
   borderRadius: 14,
   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
   marginBottom: 15,
+  width: "100%",        // ✅ เพิ่ม
 };
 
 const orderTop = {
@@ -463,7 +487,7 @@ const address = {
 const trackingBox = {
   display: "flex",
   gap: 10,
-  marginTop: 10,
+  marginTop: 5,
 };
 
 const input = {

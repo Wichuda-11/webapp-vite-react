@@ -53,6 +53,10 @@ export function CartProvider({ children }) {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
+  const clearCart = () => {
+    setCart([]);
+  };
+
   // 💰 รวมราคา
   const total = cart.reduce(
     (sum, item) => sum + item.price * item.qty,
@@ -66,7 +70,8 @@ export function CartProvider({ children }) {
       increaseQty,
       decreaseQty,
       removeItem,
-      total
+      total,
+      clearCart
     }}>
       {children}
     </CartContext.Provider>

@@ -71,7 +71,7 @@ export default function Home() {
           🍱 Johtha Thaifood
         </h2>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
           <button onClick={() => navigate("/cart")} style={cartBtn}>
             🛒 <span style={{ marginLeft: 6 }}>({cart.length})</span>
           </button>

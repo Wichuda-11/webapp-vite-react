@@ -109,3 +109,46 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ===== PRINT STYLE ===== */
+@media print {
+  @page {
+    size: Tabloid;
+    margin: 10mm;
+  }
+  body {
+  font-size: 18px; /* 👈 เพิ่มขนาดตัวอักษรหลัก */
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ซ่อนทุกอย่างก่อน */
+  body * {
+    visibility: hidden;
+  }
+
+  /* ให้เฉพาะส่วน print แสดง */
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+
+  #print-area {
+    position: absolute;
+    left: 50;
+    top: 0;
+    width: 100%;
+  }
+
+  /* ทำให้กล่องไม่ fix width */
+  #print-area > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  button {
+    display: none;
+  }
+}

@@ -1,29 +1,59 @@
 import { useState } from "react";
 import { auth, db } from "../firebase/firebase";
-import {
+import { getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // register modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regAddress, setRegAddress] = useState("");
+  const navigate = useNavigate();
 
+  // const handleLogin = async () => {
+  //   try {
+  //     await signInWithEmailAndPassword(auth, email, password);
+  //     alert("Login สำเร็จ");
+  //   } catch (err) {
+  //     alert(err.message);
+  //   }
+  // };
   const handleLogin = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
+  try {
+    const auth = getAuth();
+
+    const res = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    const user = res.user; // ✅ แก้ตรงนี้
+
+    console.log('user===>', user);
+
+    if (user.email === "johthathaifood@gmail.com") {
+      alert("Login สำเร็จ (Admin)");
+      navigate("/admin");
+    } else {
       alert("Login สำเร็จ");
-    } catch (err) {
-      alert(err.message);
+      navigate("/");
     }
-  };
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   const handleRegister = async () => {
     try {
@@ -39,7 +69,8 @@ export default function Login() {
       await setDoc(doc(db, "users", user.uid), {
         name: regName,
         email: regEmail,
-        createdate: serverTimestamp()
+        createdate: serverTimestamp(),
+        address: regAddress
       });
 
       alert("สมัครสำเร็จ");
@@ -49,6 +80,7 @@ export default function Login() {
       setRegName("");
       setRegEmail("");
       setRegPassword("");
+      setRegAddress("");
 
     } catch (err) {
       alert(err.message);
@@ -84,13 +116,32 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
           style={inputStyle}
         />
+        <div style={{ position: "relative" }}>
+                <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                style={{
+                    ...inputStyle,
+                    paddingRight: 40
+                }}
+                />
 
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-          style={inputStyle}
-        />
+                <span
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "40%",
+                    transform: "translateY(-50%)",
+                    cursor: "pointer",
+                    userSelect: "none"
+                }}
+                >
+                {showPassword ? "🙈" : "👁️"}
+                </span>
+            </div>
 
         <button onClick={handleLogin} style={loginBtn}>
           Login
@@ -111,40 +162,68 @@ export default function Login() {
             <h3 style={{ marginBottom: 15 }}>Create Account</h3>
 
             <input
-              type="text"
-              placeholder="Name"
-              value={regName}
-              onChange={(e) => setRegName(e.target.value)}
-              style={inputStyle}
+                type="text"
+                placeholder="Name"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                style={inputStyle}
             />
 
             <input
-              type="email"
-              placeholder="Email"
-              value={regEmail}
-              onChange={(e) => setRegEmail(e.target.value)}
-              style={inputStyle}
+                type="email"
+                placeholder="Email"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+                style={inputStyle}
             />
 
+            {/* PASSWORD WITH EYE ICON */}
+            <div style={{ position: "relative" }}>
+                <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                style={{
+                    ...inputStyle,
+                    paddingRight: 40
+                }}
+                />
+
+                <span
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    cursor: "pointer",
+                    userSelect: "none"
+                }}
+                >
+                {showPassword ? "🙈" : "👁️"}
+                </span>
+            </div>
+
             <input
-              type="password"
-              placeholder="Password"
-              value={regPassword}
-              onChange={(e) => setRegPassword(e.target.value)}
-              style={inputStyle}
+                type="text"
+                placeholder="Address"
+                value={regAddress}
+                onChange={(e) => setRegAddress(e.target.value)}
+                style={inputStyle}
             />
 
             <button onClick={handleRegister} style={loginBtn}>
-              สมัครสมาชิก
+                สมัครสมาชิก
             </button>
 
             <button
-              onClick={() => setIsModalOpen(false)}
-              style={{ ...registerBtn, background: "#eee" }}
+                onClick={() => setIsModalOpen(false)}
+                style={{ ...registerBtn, background: "#eee" }}
             >
-              ยกเลิก
+                ยกเลิก
             </button>
-          </div>
+            </div>
         </div>
       )}
     </div>
